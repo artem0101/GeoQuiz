@@ -3,12 +3,14 @@ package com.example.artem.geoquiz;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
 
 public class QuizActivity extends AppCompatActivity {
     private Button mTrueButton;
@@ -18,6 +20,7 @@ public class QuizActivity extends AppCompatActivity {
     private TextView mQuestionTextView;
     private static final String TAG = "QuizActivity";
     private static final String KEY_INDEX = "index";
+    private static int messageResId;
 
     private Question[] mQuestionBank = new Question[]{
             new Question(R.string.question_australia, true),
@@ -84,11 +87,13 @@ public class QuizActivity extends AppCompatActivity {
 
         mTrueButton = findViewById(R.id.true_button);
         mTrueButton.setOnClickListener(view -> {
+            blockedButton();
             checkAnswer(true);
         });
 
         mFalseButton = findViewById(R.id.false_button);
         mFalseButton.setOnClickListener(view -> {
+            blockedButton();
             checkAnswer(false);
         });
 
@@ -99,8 +104,13 @@ public class QuizActivity extends AppCompatActivity {
 
         mPrevButton = findViewById(R.id.prev_button);
         mPrevButton.setOnClickListener(event -> {
-            mCurrentIndex = (mCurrentIndex - 1) % mQuestionBank.length;
-            updateQuestion();
+            if (0 < mCurrentIndex && mCurrentIndex < mQuestionBank.length) {
+                System.out.println(mCurrentIndex);
+                mCurrentIndex = (mCurrentIndex - 1) % mQuestionBank.length;
+                updateQuestion();
+            } else {
+                Toast.makeText(this, "Это первый вопрос", Toast.LENGTH_SHORT).show();
+            }
         });
 
         updateQuestion();
@@ -108,25 +118,56 @@ public class QuizActivity extends AppCompatActivity {
 
     private void updateQuestion() {
         int question = mQuestionBank[mCurrentIndex].getTextResId();
-        mQuestionTextView.setText(question);
+        if (mQuestionBank[mCurrentIndex].getResult() != 0) {
+            blockedButton();
+            mQuestionTextView.setText(question);
+            Toast.makeText(QuizActivity.this, "На этот вопрос уже ответили", Toast.LENGTH_SHORT).show();
+        } else {
+            mTrueButton.setEnabled(true);
+            mFalseButton.setEnabled(true);
+            mQuestionTextView.setText(question);
+        }
+    }
+
+    private void blockedButton() {
+        mTrueButton.setEnabled(false);
+        mFalseButton.setEnabled(false);
     }
 
     private void checkAnswer(boolean userPressedTrue) {
         boolean answerIsTrue = mQuestionBank[mCurrentIndex].isAnswerTrue();
-
-        int messageResId = 0;
+        messageResId = 0;
 
         if (userPressedTrue == answerIsTrue) {
             messageResId = R.string.correct_toast;
+            mQuestionBank[mCurrentIndex].setResult(1);
         } else {
             messageResId = R.string.incorrect_toast;
+            mQuestionBank[mCurrentIndex].setResult(2);
         }
-
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show();
     }
 
     private void getCurrentIndex() {
-        mCurrentIndex = (mCurrentIndex + 1) % mQuestionBank.length;
-        updateQuestion();
+        int countTrue = 0;
+        int countFalse = 0;
+        if (0 <= mCurrentIndex && mCurrentIndex < mQuestionBank.length - 1) {
+            mCurrentIndex = (mCurrentIndex + 1) % mQuestionBank.length;
+            updateQuestion();
+        } else {
+//            Toast.makeText(this, "Это последний вопрос", Toast.LENGTH_SHORT).show();
+            for (int i = 0; i < mQuestionBank.length; i++) {
+                if (mQuestionBank[i].getResult() == 1) {
+                    countTrue++;
+                } else if (mQuestionBank[i].getResult() == 2) {
+                    countFalse++;
+                }
+            }
+            Toast.makeText(QuizActivity.this, "Правильных ответов: " + countTrue +
+                            "\nНеправильных ответов: " + countFalse + "\nНе получили ответа " +
+                            (mQuestionBank.length - (countFalse + countTrue)) + " вопросов.",
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 }
+
