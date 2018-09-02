@@ -1,28 +1,33 @@
 package com.example.artem.geoquiz;
 
-import android.support.v7.app.AppCompatActivity;
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
-
 public class QuizActivity extends AppCompatActivity {
     private Button mTrueButton;
     private Button mFalseButton;
+    private Button mCheatButton;
     private ImageButton mNextButton;
     private ImageButton mPrevButton;
     private TextView mQuestionTextView;
     private static final String TAG = "QuizActivity";
     private static final String KEY_INDEX = "index";
+    private static final String CHEAT = "cheat";
+    private static final int REQUEST_CODE_CHEAT = 0;
     private static int messageResId;
+    private static boolean mIsCheater; //
+    private static final String CURRENT_RESULT = "request";
+    private int mCurrentIndex = 0;
+    private int mCurrentResult = 0;
 
-    private Question[] mQuestionBank = new Question[]{
+    private static Question[] mQuestionBank = new Question[]{
             new Question(R.string.question_australia, true),
             new Question(R.string.question_oceans, true),
             new Question(R.string.question_mideast, false),
@@ -31,13 +36,27 @@ public class QuizActivity extends AppCompatActivity {
             new Question(R.string.question_asia, true)
     };
 
-    private int mCurrentIndex = 0;
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode != Activity.RESULT_OK) {
+            return;
+        }
+        if (requestCode == REQUEST_CODE_CHEAT) {
+            if (data == null) return;
+//            mIsCheater = CheatActivity.wasAnswerShown(data);
+            mQuestionBank[mCurrentIndex].setIsCheat(CheatActivity.wasAnswerShown(data));
+            mIsCheater = mQuestionBank[mCurrentIndex].getIsCheat();
+        }
+    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         Log.i(TAG, "onSaveInstance");
         outState.putInt(KEY_INDEX, mCurrentIndex);
+        outState.putInt(CURRENT_RESULT, mCurrentResult);
+        outState.putBoolean(CHEAT, mIsCheater);
+
     }
 
     @Override
@@ -78,6 +97,11 @@ public class QuizActivity extends AppCompatActivity {
 
         if (savedInstanceState != null) {
             mCurrentIndex = savedInstanceState.getInt(KEY_INDEX, 0);
+            System.out.println("mCurrentIndex: " + mCurrentIndex);
+            mCurrentResult = mQuestionBank[mCurrentIndex].getResult();
+            System.out.println("mCurrentResult: " + mCurrentResult);
+            mIsCheater = mQuestionBank[mCurrentIndex].getIsCheat(); //TODO реализовать сохранение
+            System.out.println("mIsCheater " + mIsCheater);
         }
 
         mQuestionTextView = findViewById(R.id.question_text_view);
@@ -99,11 +123,13 @@ public class QuizActivity extends AppCompatActivity {
 
         mNextButton = findViewById(R.id.next_button);
         mNextButton.setOnClickListener(view -> {
+//            mIsCheater = false;
             getCurrentIndex();
         });
 
         mPrevButton = findViewById(R.id.prev_button);
         mPrevButton.setOnClickListener(event -> {
+//            mIsCheater = false;
             if (0 < mCurrentIndex && mCurrentIndex < mQuestionBank.length) {
                 System.out.println(mCurrentIndex);
                 mCurrentIndex = (mCurrentIndex - 1) % mQuestionBank.length;
@@ -113,10 +139,18 @@ public class QuizActivity extends AppCompatActivity {
             }
         });
 
+        mCheatButton = findViewById(R.id.cheat_button);
+        mCheatButton.setOnClickListener(event -> {
+            boolean answerIsTrue = mQuestionBank[mCurrentIndex].isAnswerTrue();
+            Intent intent = CheatActivity.newIntent(QuizActivity.this, answerIsTrue);
+            startActivityForResult(intent, REQUEST_CODE_CHEAT);
+        });
+
         updateQuestion();
     }
 
     private void updateQuestion() {
+        Log.d(TAG, "Updating question text", new Exception());
         int question = mQuestionBank[mCurrentIndex].getTextResId();
         if (mQuestionBank[mCurrentIndex].getResult() != 0) {
             blockedButton();
@@ -138,24 +172,33 @@ public class QuizActivity extends AppCompatActivity {
         boolean answerIsTrue = mQuestionBank[mCurrentIndex].isAnswerTrue();
         messageResId = 0;
 
-        if (userPressedTrue == answerIsTrue) {
-            messageResId = R.string.correct_toast;
-            mQuestionBank[mCurrentIndex].setResult(1);
-        } else {
-            messageResId = R.string.incorrect_toast;
+        if (mIsCheater) {
+            messageResId = R.string.judgment_toast;
             mQuestionBank[mCurrentIndex].setResult(2);
+            mQuestionBank[mCurrentIndex].setIsCheat(mIsCheater);
+            System.out.println("result: " + mQuestionBank[mCurrentIndex].getResult() + "\nis cheat: " + mQuestionBank[mCurrentIndex].getIsCheat());
+        } else {
+            if (userPressedTrue == answerIsTrue) {
+                messageResId = R.string.correct_toast;
+                mQuestionBank[mCurrentIndex].setResult(1);
+            } else {
+                messageResId = R.string.incorrect_toast;
+                mQuestionBank[mCurrentIndex].setResult(2);
+            }
         }
+
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show();
     }
 
     private void getCurrentIndex() {
         int countTrue = 0;
         int countFalse = 0;
+        mIsCheater = false;
+
         if (0 <= mCurrentIndex && mCurrentIndex < mQuestionBank.length - 1) {
             mCurrentIndex = (mCurrentIndex + 1) % mQuestionBank.length;
             updateQuestion();
         } else {
-//            Toast.makeText(this, "Это последний вопрос", Toast.LENGTH_SHORT).show();
             for (int i = 0; i < mQuestionBank.length; i++) {
                 if (mQuestionBank[i].getResult() == 1) {
                     countTrue++;

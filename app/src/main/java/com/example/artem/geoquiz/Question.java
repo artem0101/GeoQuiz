@@ -4,26 +4,13 @@ public class Question {
     private int mTextResId;
     private boolean mAnswerTrue;
     private int result;
-
-    public int getResult() {
-        return result;
-    }
-
-    public void setResult(int result) {
-        this.result = result;
-    }
-
-    public Question(int mTextResId, boolean mAnswerTrue, int result) {
-
-        this.mTextResId = mTextResId;
-        this.mAnswerTrue = mAnswerTrue;
-        this.result = result;
-    }
+    private boolean mIsCheat;
 
     public Question(int TextResId, boolean AnswerTrue) {
         this.mTextResId = TextResId;
         this.mAnswerTrue = AnswerTrue;
         this.result = 0;
+        this.mIsCheat = false; //TODO доработать сохранеие cheat
 
     }
 
@@ -41,5 +28,21 @@ public class Question {
 
     public void setAnswerTrue(boolean answerTrue) {
         this.mAnswerTrue = answerTrue;
+    }
+
+    public int getResult() {
+        return result;
+    }
+
+    public void setResult(int result) {
+        this.result = result;
+    }
+
+    public boolean getIsCheat() {
+        return mIsCheat;
+    }
+
+    public void setIsCheat(boolean mIsCheat) {
+        this.mIsCheat = mIsCheat;
     }
 }
