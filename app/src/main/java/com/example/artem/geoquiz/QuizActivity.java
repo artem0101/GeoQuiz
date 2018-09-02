@@ -22,7 +22,7 @@ public class QuizActivity extends AppCompatActivity {
     private static final String CHEAT = "cheat";
     private static final int REQUEST_CODE_CHEAT = 0;
     private static int messageResId;
-    private static boolean mIsCheater; //
+    private static boolean mIsCheater;
     private static final String CURRENT_RESULT = "request";
     private int mCurrentIndex = 0;
     private int mCurrentResult = 0;
@@ -97,11 +97,11 @@ public class QuizActivity extends AppCompatActivity {
 
         if (savedInstanceState != null) {
             mCurrentIndex = savedInstanceState.getInt(KEY_INDEX, 0);
-            System.out.println("mCurrentIndex: " + mCurrentIndex);
             mCurrentResult = mQuestionBank[mCurrentIndex].getResult();
-            System.out.println("mCurrentResult: " + mCurrentResult);
-            mIsCheater = mQuestionBank[mCurrentIndex].getIsCheat(); //TODO реализовать сохранение
-            System.out.println("mIsCheater " + mIsCheater);
+            mIsCheater = mQuestionBank[mCurrentIndex].getIsCheat();
+
+            // for debug
+            System.out.println("mCurrentIndex: " + mCurrentIndex + "\nmCurrentResult: " + mCurrentResult + "\nmIsCheater " + mIsCheater);
         }
 
         mQuestionTextView = findViewById(R.id.question_text_view);
@@ -123,13 +123,11 @@ public class QuizActivity extends AppCompatActivity {
 
         mNextButton = findViewById(R.id.next_button);
         mNextButton.setOnClickListener(view -> {
-//            mIsCheater = false;
             getCurrentIndex();
         });
 
         mPrevButton = findViewById(R.id.prev_button);
         mPrevButton.setOnClickListener(event -> {
-//            mIsCheater = false;
             if (0 < mCurrentIndex && mCurrentIndex < mQuestionBank.length) {
                 System.out.println(mCurrentIndex);
                 mCurrentIndex = (mCurrentIndex - 1) % mQuestionBank.length;
@@ -176,6 +174,7 @@ public class QuizActivity extends AppCompatActivity {
             messageResId = R.string.judgment_toast;
             mQuestionBank[mCurrentIndex].setResult(2);
             mQuestionBank[mCurrentIndex].setIsCheat(mIsCheater);
+            // for debug
             System.out.println("result: " + mQuestionBank[mCurrentIndex].getResult() + "\nis cheat: " + mQuestionBank[mCurrentIndex].getIsCheat());
         } else {
             if (userPressedTrue == answerIsTrue) {
@@ -199,10 +198,10 @@ public class QuizActivity extends AppCompatActivity {
             mCurrentIndex = (mCurrentIndex + 1) % mQuestionBank.length;
             updateQuestion();
         } else {
-            for (int i = 0; i < mQuestionBank.length; i++) {
-                if (mQuestionBank[i].getResult() == 1) {
+            for (Question aMQuestionBank : mQuestionBank) {
+                if (aMQuestionBank.getResult() == 1) {
                     countTrue++;
-                } else if (mQuestionBank[i].getResult() == 2) {
+                } else if (aMQuestionBank.getResult() == 2) {
                     countFalse++;
                 }
             }
