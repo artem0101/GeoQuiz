@@ -55,4 +55,10 @@
         android:layout_gravity="bottom|center_horizontal"
         android:text="@string/cheat_button" />
 
+    <TextView
+        android:id="@+id/current_version"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"/>
+
 </LinearLayout>

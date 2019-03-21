@@ -1,7 +1,10 @@
 package com.example.artem.geoquiz;
 
+import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -17,6 +20,7 @@ public class QuizActivity extends AppCompatActivity {
     private ImageButton mNextButton;
     private ImageButton mPrevButton;
     private TextView mQuestionTextView;
+    private TextView mCurrentVersionSystem;
     private static final String TAG = "QuizActivity";
     private static final String KEY_INDEX = "index";
     private static final String CHEAT = "cheat";
@@ -26,6 +30,7 @@ public class QuizActivity extends AppCompatActivity {
     private static final String CURRENT_RESULT = "request";
     private int mCurrentIndex = 0;
     private int mCurrentResult = 0;
+//    private static String CURRENT_VERSION_SYSTEM;
 
     private static Question[] mQuestionBank = new Question[]{
             new Question(R.string.question_australia, true),
@@ -89,6 +94,9 @@ public class QuizActivity extends AppCompatActivity {
         Log.d(TAG, "onDestroy() called");
     }
 
+
+    @SuppressLint("SetTextI18n")
+    @TargetApi(24)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -105,9 +113,7 @@ public class QuizActivity extends AppCompatActivity {
         }
 
         mQuestionTextView = findViewById(R.id.question_text_view);
-        mQuestionTextView.setOnClickListener(event -> {
-            getCurrentIndex();
-        });
+        mQuestionTextView.setOnClickListener(event -> getCurrentIndex());
 
         mTrueButton = findViewById(R.id.true_button);
         mTrueButton.setOnClickListener(view -> {
@@ -122,9 +128,7 @@ public class QuizActivity extends AppCompatActivity {
         });
 
         mNextButton = findViewById(R.id.next_button);
-        mNextButton.setOnClickListener(view -> {
-            getCurrentIndex();
-        });
+        mNextButton.setOnClickListener(view -> getCurrentIndex());
 
         mPrevButton = findViewById(R.id.prev_button);
         mPrevButton.setOnClickListener(event -> {
@@ -143,6 +147,11 @@ public class QuizActivity extends AppCompatActivity {
             Intent intent = CheatActivity.newIntent(QuizActivity.this, answerIsTrue);
             startActivityForResult(intent, REQUEST_CODE_CHEAT);
         });
+
+        mCurrentVersionSystem = findViewById(R.id.current_version);
+        mCurrentVersionSystem.setText("API level " + Build.VERSION.SDK_INT);
+
+        System.out.println("+++" + Build.VERSION.SDK_INT + "\n+++");
 
         updateQuestion();
     }
